@@ -1,4 +1,15 @@
 const express = require('express');
+const knex = require('knex')({
+  client: 'pg',
+  connection: {
+    host: '127.0.0.1',
+    user: 'ruslantuchkov',
+    password: '',
+    database: 'smart-brain'
+  }
+});
+
+console.log(knex.select('*').from('users'));
 
 const app = express();
 
