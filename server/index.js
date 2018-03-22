@@ -20,7 +20,7 @@ const salt = bcrypt.genSaltSync(10);
 const app = express();
 
 app.use(require('body-parser').json());
-app.use(require('cors')());
+// app.use(require('cors')());
 
 app.get('/', (req, res) => {
   res.send('this is working');
