@@ -24,7 +24,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false yarn && yarn run build"
+    "heroku-postbuild":
+      "cd server && yarn && cd .. && NPM_CONFIG_PRODUCTION=false yarn && yarn run build"
   },
   "devDependencies": {
     "concurrently": "^3.5.1"

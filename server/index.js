@@ -5,10 +5,8 @@ const path = require('path');
 const db = require('knex')({
   client: 'pg',
   connection: {
-    host: '127.0.0.1',
-    user: 'ruslantuchkov',
-    password: '',
-    database: 'smart-brain'
+    connectionString: process.env.DATABASE_URL,
+    ssl: true
   }
 });
 
@@ -21,11 +19,6 @@ const salt = bcrypt.genSaltSync(10);
 const app = express();
 
 app.use(require('body-parser').json());
-// app.use(require('cors')());
-
-app.get('/', (req, res) => {
-  res.send('this is working!');
-});
 
 app.post('/signin', (req, res) => {
   const { email, password } = req.body;
@@ -106,9 +99,11 @@ app.post('/imageurl', (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-  app.use('/static', express.static(path.resolve(__dirname, '..', 'build')));
+  app.use(
+    '/static',
+    express.static(path.resolve(__dirname, '..', 'build', 'static'))
+  );
 
-  const path = require('path');
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'build', 'index.html'));
   });
