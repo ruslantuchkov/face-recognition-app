@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const Clarifai = require('clarifai');
+const path = require('path');
 const db = require('knex')({
   client: 'pg',
   connection: {
@@ -23,7 +24,7 @@ app.use(require('body-parser').json());
 // app.use(require('cors')());
 
 app.get('/', (req, res) => {
-  res.send('this is working');
+  res.send('this is working!');
 });
 
 app.post('/signin', (req, res) => {
@@ -105,11 +106,11 @@ app.post('/imageurl', (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(__dirname + '/build'));
+  app.use(express.static(__dirname + '../build'));
 
   const path = require('path');
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+    res.sendFile(path.resolve(__dirname, '..', 'build', 'index.html'));
   });
 }
 
