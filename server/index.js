@@ -99,9 +99,19 @@ app.put('/image', (req, res) => {
 app.post('/imageurl', (req, res) => {
   const { input } = req.body;
   clarifaiApp.models
-    .predict(Clarifai.FACE_DETECT_MODEL, req.body.input)
+    .predict(Clarifai.FACE_DETECT_MODEL, input)
     .then(data => res.json(data))
     .catch(err => res.status(400).json('unable work with api'));
 });
 
-app.listen('3000', () => console.log('server is running on port 3000'));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('build'));
+
+  const path = require('path');
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+  });
+}
+
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`server is running on port ${port}`));

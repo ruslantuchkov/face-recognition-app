@@ -10,7 +10,7 @@ class Register extends React.Component {
   onChange = (name, value) => this.setState({ [name]: value });
 
   onSubmit = () => {
-    fetch('http://localhost:3000/register', {
+    fetch('http://localhost:5000/register', {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

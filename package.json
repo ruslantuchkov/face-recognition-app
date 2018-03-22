@@ -12,9 +12,16 @@
     "tachyons": "^4.9.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "cd server && yarn start",
+    "dev": "concurrently \"yarn run server\" \"yarn run client\"",
+    "server": "cd server && yarn run server",
+    "client": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false yarn && yarn run build"
+  },
+  "devDependencies": {
+    "concurrently": "^3.5.1"
   }
 }
