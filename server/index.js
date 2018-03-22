@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const Clarifai = require('clarifai');
 const db = require('knex')({
   client: 'pg',
   connection: {
@@ -8,6 +9,10 @@ const db = require('knex')({
     password: '',
     database: 'smart-brain'
   }
+});
+
+const clarifaiApp = new Clarifai.App({
+  apiKey: 'bd8130a0dd3a4c7a83409274157f700b'
 });
 
 const salt = bcrypt.genSaltSync(10);
@@ -23,6 +28,9 @@ app.get('/', (req, res) => {
 
 app.post('/signin', (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json('incorrect from submission');
+  }
   db
     .select('email', 'hash')
     .where({ email })
@@ -43,6 +51,9 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req, res) => {
   const { email, name, password } = req.body;
+  if (!email || !name || !password) {
+    return res.status(400).json('incorrect from submission');
+  }
   const hash = bcrypt.hashSync(password, salt);
   db.transaction(trx => {
     trx
@@ -83,6 +94,14 @@ app.put('/image', (req, res) => {
     .returning('entries')
     .then(entries => res.json(entries[0]))
     .catch(err => res.status(400).json('unable to get entries'));
+});
+
+app.post('/imageurl', (req, res) => {
+  const { input } = req.body;
+  clarifaiApp.models
+    .predict(Clarifai.FACE_DETECT_MODEL, req.body.input)
+    .then(data => res.json(data))
+    .catch(err => res.status(400).json('unable work with api'));
 });
 
 app.listen('3000', () => console.log('server is running on port 3000'));
