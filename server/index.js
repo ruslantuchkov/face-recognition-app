@@ -105,7 +105,7 @@ app.post('/imageurl', (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('build'));
+  app.use(express.static(__dirname + '/build'));
 
   const path = require('path');
   app.get('*', (req, res) => {
