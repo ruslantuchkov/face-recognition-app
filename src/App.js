@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Route, Switch, Redirect } from 'react-router';
 import Particles from 'react-particles-js';
 import Navigation from './components/Navigation/Navigation';
 import Logo from './components/Logo/Logo';
@@ -33,12 +34,38 @@ const initialState = {
   input: '',
   imageURL: '',
   box: {},
-  route: 'signin',
-  isSignedIn: false
+  userLoading: false
+};
+
+const Signout = ({ clearState }) => {
+  sessionStorage.removeItem('token');
+  clearState();
+  return <Redirect to="/signin" />;
 };
 
 class App extends Component {
   state = initialState;
+
+  componentDidMount() {
+    const token = sessionStorage.getItem('token');
+
+    if (token) {
+      this.setState({ userLoading: true });
+      fetch('/api/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          this.loadUser(data[0]);
+          this.setState({ userLoading: false });
+        })
+        .catch(err => this.setState({ userLoading: false }));
+    }
+  }
 
   calculateFaceLocation = data => {
     const clarifaiFace =
@@ -63,7 +90,7 @@ class App extends Component {
   onPictureSubmit = () => {
     this.setState({ imageURL: this.state.input });
 
-    fetch('/imageurl', {
+    fetch('/api/imageurl', {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -74,7 +101,7 @@ class App extends Component {
       .then(
         data => {
           if (data) {
-            fetch('/image', {
+            fetch('/api/image', {
               method: 'put',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -94,16 +121,7 @@ class App extends Component {
       );
   };
 
-  onRouteChange = route => {
-    if (route === 'signout') {
-      this.setState(initialState);
-    } else if (route === 'home') {
-      this.setState({ isSignedIn: true });
-    }
-    this.setState({ route });
-  };
-
-  loadUser = ({ id, email, password, entries, name, joined }) =>
+  loadUser = ({ id, email, password = '', entries, name, joined }) =>
     this.setState({
       user: {
         id,
@@ -115,37 +133,67 @@ class App extends Component {
       }
     });
 
+  clearState = () => this.setState({ ...initialState });
+
   render() {
     return (
       <div className="App">
         <Particles className="particles" params={particlesOptions} />
-        <Navigation
-          isSignedIn={this.state.isSignedIn}
-          onRouteChange={this.onRouteChange}
-        />
+        <Navigation isSignedIn={!!this.state.user.id} />
         <Logo />
-        {this.state.route === 'home' ? (
-          <div>
-            <Rank
-              name={this.state.user.name}
-              entries={this.state.user.entries}
-            />
-            <ImageLinkForm
-              onInputChange={this.onInputChange}
-              onPictureSubmit={this.onPictureSubmit}
-            />
-            <FaceRecognition
-              box={this.state.box}
-              imageURL={this.state.imageURL}
-            />{' '}
-          </div>
-        ) : this.state.route === 'signin' ? (
-          <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange} />
+
+        {this.state.userLoading ? (
+          <div>Loading...</div>
         ) : (
-          <Register
-            loadUser={this.loadUser}
-            onRouteChange={this.onRouteChange}
-          />
+          <Switch>
+            <Route
+              path="/signin"
+              render={props => {
+                if (this.state.user.id) return <Redirect to="/home" />;
+                return <Signin loadUser={this.loadUser} {...props} />;
+              }}
+            />
+            <Route
+              path="/register"
+              render={props => <Register loadUser={this.loadUser} {...props} />}
+            />
+            <Route
+              path="/home"
+              render={props => {
+                if (!this.state.user.id) return <Redirect to="/signin" />;
+                return (
+                  <div>
+                    <Rank
+                      name={this.state.user.name}
+                      entries={this.state.user.entries}
+                    />
+                    <ImageLinkForm
+                      onInputChange={this.onInputChange}
+                      onPictureSubmit={this.onPictureSubmit}
+                    />
+                    <FaceRecognition
+                      box={this.state.box}
+                      imageURL={this.state.imageURL}
+                    />
+                  </div>
+                );
+              }}
+            />
+            <Route
+              path="/signout"
+              render={() => <Signout clearState={this.clearState} />}
+            />
+            <Route
+              path="/"
+              render={() =>
+                this.state.user.id ? (
+                  <Redirect to="/home" />
+                ) : (
+                  <Redirect to="/signin" />
+                )
+              }
+            />
+          </Switch>
         )}
       </div>
     );

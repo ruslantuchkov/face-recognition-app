@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 class Signin extends React.Component {
   state = {
@@ -9,7 +10,7 @@ class Signin extends React.Component {
   onChange = (name, value) => this.setState({ [name]: value });
 
   onSubmit = () => {
-    fetch('/signin', {
+    fetch('/api/signin', {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -19,9 +20,9 @@ class Signin extends React.Component {
     })
       .then(res => res.json())
       .then(user => {
-        if (user.id) {
+        if (user.id && user.token) {
+          sessionStorage.setItem('token', user.token);
           this.props.loadUser(user);
-          this.props.onRouteChange('home');
         }
       });
   };
@@ -71,12 +72,9 @@ class Signin extends React.Component {
               />
             </div>
             <div className="lh-copy mt3">
-              <p
-                onClick={() => this.props.onRouteChange('register')}
-                className="f6 link dim black db pointer"
-              >
+              <Link to="/register" className="f6 link dim black db pointer">
                 Register
-              </p>
+              </Link>
             </div>
           </div>
         </main>

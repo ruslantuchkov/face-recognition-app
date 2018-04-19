@@ -2,12 +2,25 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const Clarifai = require('clarifai');
 const path = require('path');
-const db = require('knex')({
-  client: 'pg',
-  connection: {
+const jwt = require('jsonwebtoken');
+
+let connection;
+if (process.env.NODE_ENV === 'production') {
+  connection = {
     connectionString: process.env.DATABASE_URL,
     ssl: true
-  }
+  };
+} else {
+  connection = {
+    host: '127.0.0.1',
+    user: '',
+    password: '',
+    database: 'smart-brain'
+  };
+}
+const db = require('knex')({
+  client: 'pg',
+  connection
 });
 
 const clarifaiApp = new Clarifai.App({
@@ -20,30 +33,61 @@ const app = express();
 
 app.use(require('body-parser').json());
 
-app.post('/signin', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json('incorrect from submission');
+app.post('/api/signin', (req, res) => {
+  const token = req.headers.authorization;
+
+  if (token) {
+    jwt.verify(token, process.env.SECRET || 'secret', (err, { email }) => {
+      if (err) return res.status(400).json('incorrect token');
+      db('users')
+        .where({ email })
+        .then(user => {
+          res.json(user);
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(400).json('unable to get user');
+        });
+    });
+  } else {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json('incorrect form submission');
+    }
+    db
+      .select('email', 'hash')
+      .where({ email })
+      .from('login')
+      .then(data => {
+        const isValid = bcrypt.compareSync(password, data[0].hash);
+
+        if (isValid) {
+          return db('users')
+            .where({ email })
+            .then(user => {
+              user[0].token = jwt.sign(
+                { email },
+                process.env.SECRET || 'secret',
+                {
+                  expiresIn: '2 days'
+                }
+              );
+              res.json(user[0]);
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(400).json('unable to get user');
+            });
+        } else {
+          res.status(400).json('wrong credentials');
+        }
+      })
+      .catch(err => res.status(400).json('wrong credentials'));
   }
-  db
-    .select('email', 'hash')
-    .where({ email })
-    .from('login')
-    .then(data => {
-      const isValid = bcrypt.compareSync(password, data[0].hash);
-      if (isValid) {
-        return db('users')
-          .where({ email })
-          .then(user => res.json(user[0]))
-          .catch(err => res.status(400).json('unable to get user'));
-      } else {
-        res.status(400).json('wrong credentials');
-      }
-    })
-    .catch(err => res.status(400).json('wrong credentials'));
 });
 
-app.post('/register', (req, res) => {
+app.post('/api/register', (req, res) => {
   const { email, name, password } = req.body;
   if (!email || !name || !password) {
     return res.status(400).json('incorrect from submission');
@@ -66,7 +110,7 @@ app.post('/register', (req, res) => {
   });
 });
 
-app.get('/profile/:id', (req, res) => {
+app.get('/api/profile/:id', (req, res) => {
   const { id } = req.params;
   db('users')
     .where({ id })
@@ -80,7 +124,7 @@ app.get('/profile/:id', (req, res) => {
     .catch(err => res.status(400).json('not found'));
 });
 
-app.put('/image', (req, res) => {
+app.put('/api/image', (req, res) => {
   const { id } = req.body;
   db('users')
     .where({ id })
@@ -90,7 +134,7 @@ app.put('/image', (req, res) => {
     .catch(err => res.status(400).json('unable to get entries'));
 });
 
-app.post('/imageurl', (req, res) => {
+app.post('/api/imageurl', (req, res) => {
   const { input } = req.body;
   clarifaiApp.models
     .predict(Clarifai.FACE_DETECT_MODEL, input)
