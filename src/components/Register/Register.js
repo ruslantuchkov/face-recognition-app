@@ -10,7 +10,7 @@ class Register extends React.Component {
   onChange = (name, value) => this.setState({ [name]: value });
 
   onSubmit = () => {
-    fetch('/register', {
+    fetch('/api/register', {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -23,9 +23,9 @@ class Register extends React.Component {
       .then(user => {
         if (user.id) {
           this.props.loadUser(user);
-          this.props.onRouteChange('home');
         }
-      });
+      })
+      .catch(console.log);
   };
 
   render() {

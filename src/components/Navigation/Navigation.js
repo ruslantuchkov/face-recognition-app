@@ -1,13 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import ProfileIcon from '../Profile/ProfileIcon';
 
-const Navigation = ({ isSignedIn }) => {
+const Navigation = ({ isSignedIn, toggleModal }) => {
   if (isSignedIn) {
     return (
       <nav style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Link to="/signout" className="f3 link dim black underline pa3 pointer">
+        <ProfileIcon toggleModal={toggleModal} />
+        {/* <Link to="/signout" className="f3 link dim black underline pa3 pointer">
           Sign Out
-        </Link>
+        </Link> */}
       </nav>
     );
   } else {

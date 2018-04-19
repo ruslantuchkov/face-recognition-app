@@ -8,6 +8,7 @@
     }
   },
   "dependencies": {
+    "bootstrap": "^4.1.0",
     "clarifai": "^2.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
@@ -16,6 +17,7 @@
     "react-router-dom": "^4.2.2",
     "react-scripts": "1.1.1",
     "react-tilt": "^0.1.4",
+    "reactstrap": "^5.0.0",
     "tachyons": "^4.9.1"
   },
   "scripts": {
@@ -26,8 +28,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "heroku-postbuild":
-      "cd server && yarn && cd .. && NPM_CONFIG_PRODUCTION=false yarn && yarn run build"
+    "heroku-postbuild": "cd server && yarn && cd .. && NPM_CONFIG_PRODUCTION=false yarn && yarn run build"
   },
   "devDependencies": {
     "concurrently": "^3.5.1"

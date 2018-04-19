@@ -8,6 +8,7 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
+import Profile from './components/Profile/Profile';
 import './App.css';
 
 const particlesOptions = {
@@ -26,15 +27,17 @@ const initialState = {
   user: {
     id: '',
     name: '',
-    password: '',
     email: '',
     entries: 0,
-    joined: ''
+    joined: '',
+    age: null,
+    pet: ''
   },
   input: '',
   imageURL: '',
   box: {},
-  userLoading: false
+  userLoading: false,
+  isProfileOpen: false
 };
 
 const Signout = ({ clearState }) => {
@@ -63,7 +66,10 @@ class App extends Component {
           this.loadUser(data[0]);
           this.setState({ userLoading: false });
         })
-        .catch(err => this.setState({ userLoading: false }));
+        .catch(err => {
+          console.log(err.message);
+          this.setState({ userLoading: false });
+        });
     }
   }
 
@@ -121,26 +127,37 @@ class App extends Component {
       );
   };
 
-  loadUser = ({ id, email, password = '', entries, name, joined }) =>
+  loadUser = user => {
+    console.log(user);
     this.setState({
-      user: {
-        id,
-        email,
-        password,
-        entries,
-        name,
-        joined
-      }
+      user
     });
+  };
 
   clearState = () => this.setState({ ...initialState });
+
+  toggleProfile = () =>
+    this.setState(prevState => ({
+      isProfileOpen: !prevState.isProfileOpen
+    }));
 
   render() {
     return (
       <div className="App">
         <Particles className="particles" params={particlesOptions} />
-        <Navigation isSignedIn={!!this.state.user.id} />
+        <Navigation
+          isSignedIn={!!this.state.user.id}
+          toggleModal={this.toggleProfile}
+        />
         <Logo />
+        {this.state.isProfileOpen && (
+          <Profile
+            isProfileOpen={this.state.isProfileOpen}
+            toggleModal={this.toggleProfile}
+            user={this.state.user}
+            loadUser={this.loadUser}
+          />
+        )}
 
         {this.state.userLoading ? (
           <div>Loading...</div>

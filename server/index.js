@@ -124,6 +124,27 @@ app.get('/api/profile/:id', (req, res) => {
     .catch(err => res.status(400).json('not found'));
 });
 
+app.post('/api/profile/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, age = '', pet = '' } = req.body;
+
+  if (!name) {
+    return res.status(400).json('incorrect from submission');
+  }
+
+  db('users')
+    .where({ id })
+    .update({ name })
+    // .returning('*')
+    .then(data => {
+      res.json('success');
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(400).json('not found');
+    });
+});
+
 app.put('/api/image', (req, res) => {
   const { id } = req.body;
   db('users')
