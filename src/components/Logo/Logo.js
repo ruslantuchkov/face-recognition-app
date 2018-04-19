@@ -1,9 +1,10 @@
 import React from 'react';
+import { withRouter } from 'react-router';
 import Tilt from 'react-tilt';
 import brain from './brain.png';
 import './Logo.css';
 
-const Logo = () => {
+const Logo = props => {
   return (
     <div className="ma4 mt0">
       <Tilt
@@ -11,7 +12,10 @@ const Logo = () => {
         style={{ height: 150, width: 150 }}
         options={{ max: 55 }}
       >
-        <div className="Tilt-inner pa3">
+        <div
+          className="Tilt-inner pa3"
+          onClick={() => props.history.push('/home')}
+        >
           <img style={{ paddingTop: '10px' }} src={brain} alt="logo" />
         </div>
       </Tilt>
@@ -19,4 +23,4 @@ const Logo = () => {
   );
 };
 
-export default Logo;
+export default withRouter(Logo);

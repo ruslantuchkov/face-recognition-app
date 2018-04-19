@@ -1,7 +1,7 @@
 import React from 'react';
 import './FaceRecognition.css';
 
-const FaceRecognition = ({ imageURL, box }) => {
+const FaceRecognition = ({ imageURL, boxes }) => {
   return (
     <div className="center ma">
       <div className="absolute mt2">
@@ -12,15 +12,18 @@ const FaceRecognition = ({ imageURL, box }) => {
           width="500px"
           height="auto"
         />
-        <div
-          className="bounding-box"
-          style={{
-            top: box.topRow,
-            right: box.rightCol,
-            left: box.leftCol,
-            bottom: box.bottomRow
-          }}
-        />
+        {boxes.map(box => (
+          <div
+            key={`box${box.topRow}${box.rightCol}`}
+            className="bounding-box"
+            style={{
+              top: box.topRow,
+              right: box.rightCol,
+              bottom: box.bottomRow,
+              left: box.leftCol
+            }}
+          />
+        ))}
       </div>
     </div>
   );

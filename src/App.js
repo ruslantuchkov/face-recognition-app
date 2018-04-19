@@ -30,14 +30,15 @@ const initialState = {
     email: '',
     entries: 0,
     joined: '',
-    age: null,
+    age: '',
     pet: ''
   },
   input: '',
   imageURL: '',
-  box: {},
+  boxes: [],
   userLoading: false,
-  isProfileOpen: false
+  isProfileOpen: false,
+  error: null
 };
 
 const Signout = ({ clearState }) => {
@@ -74,21 +75,22 @@ class App extends Component {
   }
 
   calculateFaceLocation = data => {
-    const clarifaiFace =
-      data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
     const height = Number(image.height);
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - clarifaiFace.right_col * width,
-      bottomRow: height - clarifaiFace.bottom_row * height
-    };
+    return data.outputs[0].data.regions.map(face => {
+      const clarifaiFace = face.region_info.bounding_box;
+      return {
+        leftCol: clarifaiFace.left_col * width,
+        topRow: clarifaiFace.top_row * height,
+        rightCol: width - clarifaiFace.right_col * width,
+        bottomRow: height - clarifaiFace.bottom_row * height
+      };
+    });
   };
 
-  displayFaceBox = box => {
-    this.setState({ box });
+  displayFaceBox = boxes => {
+    this.setState({ boxes });
   };
 
   onInputChange = value => this.setState({ input: value });
@@ -104,31 +106,30 @@ class App extends Component {
       })
     })
       .then(res => res.json())
-      .then(
-        data => {
-          if (data) {
-            fetch('/api/image', {
-              method: 'put',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: this.state.user.id
-              })
+      .then(data => {
+        if (data.status !== 'error') {
+          fetch('/api/image', {
+            method: 'put',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: this.state.user.id
             })
-              .then(res => res.json())
-              .then(count =>
-                this.setState({ user: { ...this.state.user, entries: count } })
-              )
-              .catch(console.log);
+          })
+            .then(res => res.json())
+            .then(count =>
+              this.setState({ user: { ...this.state.user, entries: count } })
+            )
+            .catch(console.log);
 
-            this.displayFaceBox(this.calculateFaceLocation(data));
-          }
-        },
-        err => console.log(err)
-      );
+          this.displayFaceBox(this.calculateFaceLocation(data));
+        } else {
+          this.setState({ error: `Incorrect image url or ${data.message}.` });
+        }
+      })
+      .catch(console.log);
   };
 
   loadUser = user => {
-    console.log(user);
     this.setState({
       user
     });
@@ -189,9 +190,10 @@ class App extends Component {
                       onPictureSubmit={this.onPictureSubmit}
                     />
                     <FaceRecognition
-                      box={this.state.box}
+                      boxes={this.state.boxes}
                       imageURL={this.state.imageURL}
                     />
+                    <p style={{ color: '#d40056' }}>{this.state.error}</p>
                   </div>
                 );
               }}
