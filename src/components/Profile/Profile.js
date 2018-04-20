@@ -1,40 +1,70 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 import './Profile.css';
 
 class Profile extends Component {
   state = {
-    name: this.props.user.name,
-    age: this.props.user.age || '',
-    pet: this.props.user.pet || ''
+    formData: {
+      name: this.props.user.name,
+      age: this.props.user.age || '',
+      pet: this.props.user.pet || ''
+    },
+    formValid: {
+      name: true,
+      age: true,
+      pet: true
+    }
   };
 
-  onProfileUpdate = data => {
-    fetch(`/api/profile/${this.props.user.id}`, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: sessionStorage.getItem('token')
-      },
-      body: JSON.stringify({
-        ...data
+  onProfileUpdate = () => {
+    axios
+      .post(`/api/profile/${this.props.user.id}`, {
+        input: { ...this.state.formData }
       })
-    })
       .then(resp => {
-        if (resp.status === 200 || resp.status === 304) {
+        if (resp.data === 'success') {
           this.props.toggleModal();
-          this.props.loadUser({ ...this.props.user, ...data });
+          this.props.loadUser({ ...this.props.user, ...this.state.formData });
         }
       })
-      .catch(console.log);
+      .catch(err => {
+        console.log(err);
+      });
   };
 
-  onFormChange = event => {
-    this.setState({ [event.target.name]: event.target.value });
+  onFormChange = ({ target: { name, value } }) => {
+    this.setState({
+      formData: {
+        ...this.state.formData,
+        [name]: value
+      },
+      formValid: {
+        ...this.state.formValid,
+        [name]: this.validate(name, value)
+      }
+    });
+  };
+
+  validate = (fieldName, value) => {
+    switch (fieldName) {
+      case 'name':
+        return value ? true : false;
+      case 'age':
+        return !isNaN(+value) ? true : false;
+      default:
+        return true;
+    }
   };
 
   render() {
     const { toggleModal, user } = this.props;
-    const { name, age, pet } = this.state;
+    const { name, age, pet } = this.state.formData;
+    const {
+      name: nameError,
+      age: ageError,
+      pet: petError
+    } = this.state.formValid;
+
     return (
       <div className="profile-modal">
         <article className="br3 ba b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center bg-white">
@@ -58,7 +88,7 @@ class Profile extends Component {
               value={name}
               type="text"
               name="name"
-              className="pa2 ba w-100"
+              className={`pa2 ba w-100${!nameError ? ` b--red` : ``}`}
             />
             <label className="mt2 fw6" htmlFor="user-age">
               Age:
@@ -67,7 +97,7 @@ class Profile extends Component {
               onChange={this.onFormChange}
               type="text"
               name="age"
-              className="pa2 ba w-100"
+              className={`pa2 ba w-100${!ageError ? ` b--red` : ``}`}
               value={age}
             />
             <label className="mt2 fw6" htmlFor="user-pet">
@@ -77,7 +107,7 @@ class Profile extends Component {
               onChange={this.onFormChange}
               type="text"
               name="pet"
-              className="pa2 ba w-100"
+              className={`pa2 ba w-100${!petError ? ` b--red` : ``}`}
               value={pet}
             />
             <div
@@ -86,7 +116,8 @@ class Profile extends Component {
             >
               <button
                 className="b pa2 grow pointer hover-white w-40 bg-light-blue b--black-20"
-                onClick={() => this.onProfileUpdate({ name, age, pet })}
+                onClick={() => this.onProfileUpdate()}
+                disabled={Object.values(this.state.formValid).some(val => !val)}
               >
                 Save
               </button>

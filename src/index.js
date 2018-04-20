@@ -5,6 +5,11 @@ import App from './App';
 import './index.css';
 import 'tachyons';
 import 'bootstrap/dist/css/bootstrap.css';
+import axios from 'axios';
+
+axios.defaults.headers.common['Authorization'] = sessionStorage.getItem(
+  'token'
+);
 
 ReactDOM.render(
   <BrowserRouter>

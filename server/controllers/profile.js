@@ -14,16 +14,16 @@ const handleProfileGet = db => (req, res) => {
 
 const handleProfileUpdate = db => (req, res) => {
   const { id } = req.params;
-  const { name, age = '', pet = '' } = req.body;
+  const { input } = req.body;
 
-  if (!name) {
+  if (!input.name) {
     return res.status(400).json('incorrect from submission');
   }
 
   db('users')
     .where({ id })
-    .update({ name })
-    .then(data => {
+    .update({ name: input.name })
+    .then(() => {
       res.json('success');
     })
     .catch(err => {

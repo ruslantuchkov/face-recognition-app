@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import './Signin.css';
 
 class Signin extends React.Component {
   state = {
@@ -10,26 +12,23 @@ class Signin extends React.Component {
   onChange = (name, value) => this.setState({ [name]: value });
 
   onSubmit = () => {
-    fetch('/api/signin', {
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    axios
+      .post('/api/signin', {
         email: this.state.email,
         password: this.state.password
       })
-    })
-      .then(res => res.json())
-      .then(user => {
+      .then(({ data: user }) => {
         if (user.id && user.token) {
           sessionStorage.setItem('token', user.token);
           this.props.loadUser(user);
         }
-      });
+      })
+      .catch(console.log);
   };
 
   render() {
     return (
-      <article className="br3 ba b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center">
+      <article className="signin br3 ba b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center">
         <main className="pa4 black-80">
           <div className="measure">
             <fieldset id="sign_up" className="ba b--transparent ph0 mh0">

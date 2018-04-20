@@ -10,6 +10,7 @@ import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 import Profile from './components/Profile/Profile';
 import Signout from './components/Signout/Signout';
+import axios from 'axios';
 import './App.css';
 
 const particlesOptions = {
@@ -50,18 +51,12 @@ class App extends Component {
 
     if (token) {
       this.setState({ userLoading: true });
-      fetch('/api/auth', {
-        headers: {
-          Authorization: token
-        }
-      })
-        .then(response => response.json())
-        .then(data => {
+      axios('/api/auth')
+        .then(({ data }) => {
           this.loadUser(data[0]);
-          this.setState({ userLoading: false });
         })
         .catch(err => {
-          console.log(err.message);
+          console.log(err);
           this.setState({ userLoading: false });
         });
     }
@@ -83,54 +78,44 @@ class App extends Component {
   };
 
   displayFaceBox = boxes => {
-    this.setState({ boxes });
+    this.setState({ boxes, error: null });
   };
 
   onInputChange = value => this.setState({ input: value });
 
   onPictureSubmit = () => {
     this.setState({ imageURL: this.state.input });
-
-    fetch('/api/imageurl', {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: sessionStorage.getItem('token')
-      },
-      body: JSON.stringify({
-        input: this.state.input
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status !== 'error') {
-          fetch('/api/image', {
-            method: 'put',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: sessionStorage.getItem('token')
-            },
-            body: JSON.stringify({
-              id: this.state.user.id
-            })
-          })
-            .then(res => res.json())
-            .then(count =>
-              this.setState({ user: { ...this.state.user, entries: count } })
-            )
-            .catch(console.log);
-
-          this.displayFaceBox(this.calculateFaceLocation(data));
-        } else {
-          this.setState({ error: `Incorrect image url or ${data.message}.` });
+    axios
+      .post('/api/imageurl', { input: this.state.input })
+      .then(({ data }) => {
+        if (!data.outputs[0].data.regions) {
+          return this.setState({ error: 'No faces here.' });
         }
+
+        this.displayFaceBox(this.calculateFaceLocation(data));
+
+        axios
+          .put('/api/image', { id: this.state.user.id })
+          .then(({ data }) =>
+            this.setState({ user: { ...this.state.user, entries: data } })
+          )
+          .catch(console.log);
       })
-      .catch(console.log);
+      .catch(err => {
+        if (err.response) {
+          this.setState({
+            error: `Incorrect image url or ${err.response.data}.`
+          });
+        } else {
+          console.log(err);
+        }
+      });
   };
 
   loadUser = user => {
     this.setState({
-      user
+      user,
+      userLoading: false
     });
   };
 
@@ -145,10 +130,14 @@ class App extends Component {
     return (
       <div className="App">
         <Particles className="particles" params={particlesOptions} />
-        <Navigation
-          isSignedIn={!!this.state.user.id}
-          toggleModal={this.toggleProfile}
-        />
+        {this.state.userLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <Navigation
+            isSignedIn={!!this.state.user.id}
+            toggleModal={this.toggleProfile}
+          />
+        )}
         <Logo />
         {this.state.isProfileOpen && (
           <Profile

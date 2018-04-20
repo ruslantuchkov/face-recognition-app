@@ -21,3 +21,7 @@
   color: grey;
   cursor: pointer;
 }
+
+.profile-modal input {
+  outline-style: none;
+}

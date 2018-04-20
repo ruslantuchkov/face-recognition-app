@@ -7,9 +7,6 @@ const Navigation = ({ isSignedIn, toggleModal }) => {
     return (
       <nav style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <ProfileIcon toggleModal={toggleModal} />
-        {/* <Link to="/signout" className="f3 link dim black underline pa3 pointer">
-          Sign Out
-        </Link> */}
       </nav>
     );
   } else {
