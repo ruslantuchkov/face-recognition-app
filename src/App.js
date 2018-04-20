@@ -9,6 +9,7 @@ import Rank from './components/Rank/Rank';
 import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 import Profile from './components/Profile/Profile';
+import Signout from './components/Signout/Signout';
 import './App.css';
 
 const particlesOptions = {
@@ -41,12 +42,6 @@ const initialState = {
   error: null
 };
 
-const Signout = ({ clearState }) => {
-  sessionStorage.removeItem('token');
-  clearState();
-  return <Redirect to="/signin" />;
-};
-
 class App extends Component {
   state = initialState;
 
@@ -55,10 +50,8 @@ class App extends Component {
 
     if (token) {
       this.setState({ userLoading: true });
-      fetch('/api/signin', {
-        method: 'POST',
+      fetch('/api/auth', {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: token
         }
       })
@@ -100,7 +93,10 @@ class App extends Component {
 
     fetch('/api/imageurl', {
       method: 'post',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: sessionStorage.getItem('token')
+      },
       body: JSON.stringify({
         input: this.state.input
       })
@@ -110,7 +106,10 @@ class App extends Component {
         if (data.status !== 'error') {
           fetch('/api/image', {
             method: 'put',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: sessionStorage.getItem('token')
+            },
             body: JSON.stringify({
               id: this.state.user.id
             })
